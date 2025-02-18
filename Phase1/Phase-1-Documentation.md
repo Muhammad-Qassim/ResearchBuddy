@@ -58,6 +58,39 @@ Initially, I finetuned T5-small using standard finetune. The key steps included 
 3. Evaluating performance using ROUGE metrics which showed mediocre results due to repetition and lack of coherence.
 4. The finetuning process took approximately 10 hours on my local machine, and the resulting summaries often were redundant and lacked structured clarity.
 
+### Training Arguments for T5-small
+
+```
+training_args = Seq2SeqTrainingArguments(
+    output_dir="t5-small-finetuned-arxiv",
+    evaluation_strategy="steps",
+    eval_steps=1000,  
+    save_steps=1000, 
+    learning_rate=5e-5,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    gradient_accumulation_steps=4,
+    weight_decay=0.01,
+    save_total_limit=2,
+    num_train_epochs=1,
+    predict_with_generate=True,
+    fp16=True,
+    load_best_model_at_end=True,
+    logging_dir="./logs",
+    report_to="none",
+    push_to_hub=False
+)
+```
+**Explaination of Training Arguments**
+
+1. output_dir: Directory to save the fine-tuned model.
+2. evaluation_strategy: Evaluate model performance every 1000 steps.
+3. learning_rate: Set to 5e-5 for stable training.
+4. per_device_train_batch_size: Batch size of 4 to fit within my local GPU's memory (NVIDIA RTX 4050 6GB VRAM).
+5. fp16: Enable mixed-precision training to reduce memory usage.
+6. predict_with_generate: Generate predictions during evaluation for ROUGE score calculation.
+
+
 ## 2. Fine-tuning FLAN-T5-base with LoRA
 
 To overcome the limitations of T5-small, I fine-tuned FLAN-T5-base using LoRA (Low-Rank Adaptation). The process included:
@@ -68,52 +101,189 @@ To overcome the limitations of T5-small, I fine-tuned FLAN-T5-base using LoRA (L
 4. Evaluation with ROUGE metrics showed nearly 2.8 times better than the t5-small model.
 
 
-## 3. Comparison B/W Fine-tuned Models
+### LoRA Configuration for FLAN-T5-base
 
-| Feature |  T5-small | FLAN-T5-base with LoRA |
-|:-----|:--------:|------:|
-| Fine-Tuning Approach   | Full-parameter tuning | LoRA (Efficient tuning) |
-| Training Time   |  ~10 hours  |   ~10 minutes |
-| Output Quality   | Repetitive, lacks structure | Well-structured, concise |
-| ROUGE Score   | 18% |    50% |
+```
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q", "v"],
+    lora_dropout=0.05,
+    bias="none",
+    task_type=TaskType.SEQ_2_SEQ_LM
+)
+```
+**Explanation of LoRA Configuration:**
 
-## 4. Why LoRA Outperformed Standard Fine-Tuning
+1. r=16: Rank of the low-rank matrices. A higher rank captures more complex patterns but increases parameters.
+2. lora_alpha=32: Scaling factor for LoRA weights.
+3. target_modules=["q", "v"]: Apply LoRA to query and value attention layers for efficient adaptation.
+4. lora_dropout=0.05: Dropout rate to prevent overfitting.
+5. task_type=TaskType.SEQ_2_SEQ_LM: Specifies the task as sequence-to-sequence language modeling.
+
+### Training Arguments for FLAN-T5-base
+
+```
+training_args = Seq2SeqTrainingArguments(
+    output_dir=output_dir,
+		auto_find_batch_size=True,
+    learning_rate=1e-3, # higher learning rate
+    num_train_epochs=5,
+    logging_dir=f"{output_dir}/logs",
+    logging_strategy="steps",
+    logging_steps=500,
+    save_strategy="no",
+    report_to="tensorboard",
+)
+```
+**Explanation of Training Arguments:**
+
+1. output_dir: Directory to save the fine-tuned model.
+2. auto_find_batch_size: Automatically determine the maximum batch size that fits in GPU memory.
+3. learning_rate: Set to 1e-3 for faster convergence.
+4. num_train_epochs: Train for 5 epochs for sufficient learning.
+5. logging_steps: Log metrics every 500 steps.
+
+
+### Quantization for FLAN-T5-base
+
+Since I trained FLAN-T5-base on my local machine with limited resources, I used 8-bit quantization to reduce memory usage:
+
+```
+model = AutoModelForSeq2SeqLM.from_pretrained(model_id, load_in_8bit=True, device_map="auto")
+```
+
+**Why Quantization?**
+
+1. Memory Efficiency: Reduces memory footprint, allowing training on GPUs with limited VRAM.
+2. Performance: Maintains model performance while reducing computational overhead.
+3. Minimal impact on model quality
+
+## 3. Fine-tuning FLAN-T5-base with LoRA
+
+For larger-scale summarization tasks, I fine-tuned FLAN-T5-large using LoRA in Google Colab. Unlike FLAN-T5-base, I did not use quantization because Colab provided sufficient resources.
+
+### LoRA Configuration for FLAN-T5-large
+
+```
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q", "v"],
+    lora_dropout=0.05,
+    bias="none",
+    task_type=TaskType.SEQ_2_SEQ_LM
+)
+```
+**Explanation of LoRA Configuration:**
+
+1. r=16: Same rank as FLAN-T5-base for consistency.
+2. lora_alpha=32: Same scaling factor for balanced adaptation.
+3. target_modules=["q", "v"]: Apply LoRA to query and value attention layers.
+
+
+### Training Arguments for FLAN-T5-large
+
+```
+training_args = Seq2SeqTrainingArguments(
+    output_dir=output_dir,
+		auto_find_batch_size=True,
+    learning_rate=1e-3,
+    num_train_epochs=5,
+    logging_dir=f"{output_dir}/logs",
+    logging_strategy="steps",
+    logging_steps=500,
+    save_strategy="no",
+    report_to="none",
+)
+```
+
+**Explanation of Training Arguments:**
+
+1. output_dir: Directory to save the fine-tuned model.
+2. auto_find_batch_size: Automatically determine the maximum batch size that fits in GPU memory
+3. learning_rate: Set to 1e-3 for faster convergence, similar to FLAN-T5-base.
+4. num_train_epochs: Train for 5 epochs for sufficient learning.
+5. logging_steps: Log metrics every 500 steps for monitoring progress.
+6. save_strategy="no": Disable model checkpointing to save disk space since Colab storage is limited.
+7. report_to="none": Disable external reporting to focus on local evaluation.
+
+### Why No Quantization for FLAN-T5-large?
+
+1. Google Colab Resources: Colab provided an t4 GPU with 16GB VRAM, which was sufficient to train FLAN-T5-large without quantization.
+2. Performance: Avoiding quantization ensured that the model retained its full precision, leading to better summarization quality.
+3. Scalability: Training without quantization allowed the model to leverage the full capabilities of the t4 GPU.
+
+
+## 4. Comparison B/W Fine-tuned Models
+
+| Feature |  T5-small | FLAN-T5-base with LoRA |FLAN-T5-large with LoRA |
+|:-----|:--------|:------|:------|
+| Fine-Tuning Approach   | Full-parameter tuning | LoRA (Efficient tuning) | LoRA (Efficient tuning) |
+| Training Time   |  ~10 hours  |   ~10 minutes | ~1 hour |
+| Output Quality   | Repetitive, lacks structure | Well-structured, concise | Highly structured, detailed  |
+| ROUGE Score   | 18% |    50% |  54% |
+| Hardware used   | NVIDIA 4050 6GB VRAM |    NVIDIA 4050 6GB VRAM | Colab T4 6GB VRAM |
+| Quantization   | None |    8-bit |  None |
+
+## 5. Why LoRA Outperformed Standard Fine-Tuning
 
 LoRA (Low-Rank Adaptation) significantly improved the efficiency and output quality by:
 
-1. Reducing the number of trainable parameters, making fine-tuning faster and less resource-intensive.
-2. Maintaining the original pre-trained weights while adapting specific layers to the summarization task.
-3. Preventing overfitting and redundancy by focusing on task-specific learning rather than updating the entire model.
-
-Compared to T5-small, FLAN-T5 with LoRA proved to be the superior approach, offering faster training, lower computational costs, and significantly better summarization performance.
-
-## Comparision B/W Abstract, T5-small, and FLAN-T5-base
-
-**Article:** A Mathematical Explanation of UNet (https://arxiv.org/abs/2410.04434)
-
-**Abstract:**  
-
-In this technical report, we demonstrate our solution forthe 2019 COCO panoptic segmentation task. Our methodfirst performs instance segmentation and semantic segmen-tation separately, then combines the two to generate panop-tic segmentation results. To enhance the performance, weadd several expert models of Mask R-CNN in instance seg-mentation to tackle the data imbalance problem in the train-ing data; also HTC model is adopted yielding our best in-stance segmentation results. In semantic segmentation, wetrained several models with various backbones and use anensemble strategy which further boosts the segmentation re-sults. In the end, we analyze various combinations of in-stance and semantic segmentation, and report on their per-formance for the final panoptic segmentation results. Ourbest model achieves P Q 47.1 on 2019 COCO panoptic test-dev data.
-
-**T5-small summary:**
-
-in this technical report, we demonstrate our solution for 2019 COCO panoptic segmentation task. we use instance segmentation and semantic segmen- tation as a method which performs the s c in- stance and semantic segmen- tation separately, then combines the two to generate panop-tic segmentation results. our technique performs the instance segmentation and semantic segmen- tation separately, then combines the two to generate panop-tic segmentation results. to facilitate the results in this results, we use the same way as we have achieved an impressive re- sult, we compare the results of
+1. LoRA trains only a small subset of parameters, making fine-tuning faster and less resource-intensive.
+2. By freezing the base model and adapting only specific layers, LoRA reduces memory usage, enabling training on smaller GPUs like the RTX 4050 6GB.
+3. Maintaining the original pre-trained weights while adapting specific layers to the summarization task.
+4. Preventing overfitting and redundancy by focusing on task-specific learning rather than updating the entire model.
+5. LoRA allows fine-tuning of larger models like FLAN-T5-large on high-resource environments like Google Colab without quantization
 
 
-**FLAN-T5-base summary:** 
+## 6. Comparision B/W Abstract, T5-small, and FLAN-T5-base
 
-**Main Research Objective:** To develop a joint COCO/Mapillary Workshop strategy for the 2019 COCO panoptic segmentation challenge. 
+## **Article:** 
 
-**Methodology:** * Created a dynamic model, Mask R-CNN, to extract the pixel-level category labels of a given image. * Recommendations to a network architecture for mask segmentation and semantic segmentation. * Contested several combinations of in-stance and semantic segmentation to achieve a strong performance. 
+A Mathematical Explanation of UNet (https://arxiv.org/abs/2410.04434)
 
-**Key Findings:** * Mask R-CNN was the best model for in-stance segmentation. * Mask R-CNN extended fast R-CNN (Fast R-CNN) to achieve the highest possible performance. * HTC model provided the best in-stance segmentation results for both the mask segmentation task and the semantic segmentation task. * The combined model was optimized for the best results on the Coco-Mapillary Workshop dataset. * The model achieved an optimal performance in the Coco-Mapillary Workshop task, achieving an overall performance of 47.1 based on Coco-Mapillary Workshop data. 
+## **Abstract:**  
 
-**Conclusions:** * The proposed approach improved the accuracy of the task by using an ensemble strategy. * It combined features of mask segmentation with semantic segmentation to create superior performance on the Coco-Mapillary Workshop dataset. * The ensemble strategy significantly enhanced the segmentation performance. * The model obtained the best in-stance segmentation result for the Coco-Mapillary Workshop dataset.
+The UNet architecture has transformed image segmentation. UNet's versatility and accuracy have driven its widespread adoption, significantly advancing fields reliant on machine learning problems with images. In this work, we give a clear and concise mathematical explanation of UNet. We explain what is the meaning and function of each of the components of UNet. We will show that UNet is solving a control problem. We decompose the control variables using multigrid methods. Then, operator-splitting techniques are used to solve the problem, whose architecture exactly recovers the UNet architecture. Our result shows that UNet is a one-step operator-splitting algorithm for the control problem.
 
+## **T5-small summary:**
 
+we give a clear and concise mathematical ex-planation of UNet Xue-Cheng Tai, Hao Liu, Raymond H. Chan, Lingfeng Li Abstract The UNet architecture has transformed image segmentation. our results show that UNet is solving a control problem. we decompose the control variables using multigrid methods.
 
+## **FLAN-T5-base summary:** 
 
+**1. Main Research Objective:** To provide an explanation of the UNet architecture, the meaning and function of each component of UNet. 
 
+**2. Methodology:** - Decompose the control variables into multiple grids. - Operational splits the control variables by applying operator-splitting techniques. - ODE techniques are used to solve the control problem. 
+
+**3. Key Findings:** - UNet is a one-step operator-splitting algorithm for control problems. - It resembles UNet in both dimensions and width. 
+
+**4. Conclusions:** - UNet is a unique operation for control problems. - The design is correct for UNet, and it is a unique operator-splitting algorithm for image segmentation.
+
+## **FLAN-T5-large summary:** 
+
+**Main Research Objective:** To describe the mathematical explanation of UNet, a widely used image segmentation network with a unique architecture.
+ 
+**Methodology:** 
+
+* Derived mathematical formulas for each UNet component.
+
+* Presented a mathematical model for the network's components. 
+
+* Used operator-splitting techniques to solve a control problem. 
+
+**Key Findings:** 
+
+* UNet is solving a control problem using the shortest linear approximation (LOR). 
+
+* Operator-splitting techniques achieve exact LOR reproduction based on the LOR and the control variables. 
+
+**Conclusions:** 
+
+* UNet is a one-step operator-splitting algorithm for the control problem. 
+
+* The LOR method in UNet accurately reproduces the UNet architecture and improves the accuracy and performance of image segmentation tasks.
 
 
 ## Retrieving TOP-RATED Papers
