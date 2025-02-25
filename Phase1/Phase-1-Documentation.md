@@ -4,6 +4,19 @@ In this phase, I focused on summarizing research papers using the fine-tuned mod
 
 Additionally, I practiced approaches to retrieve top-rated papers using the semantic scholar API, download PDFs, extract text from PDFs using pdfminer.six, and feed the extracted text into a fine-tuned model for summarization.
 
+
+# Important Links
+
+1. https://huggingface.co/docs/peft/en/package_reference/lora
+2. https://huggingface.co/docs/transformers/en/main_classes/trainer
+3. https://huggingface.co/docs/transformers/en/main_classes/quantization
+4. https://huggingface.co/google-t5/t5-small
+5. https://huggingface.co/google/flan-t5-base
+6. https://huggingface.co/google/flan-t5-large
+7. https://huggingface.co/datasets/ccdv/arxiv-summarization
+8. https://www.semanticscholar.org/product/api
+9. https://info.arxiv.org/help/api/basics.html
+
 # Dataset Creation
 
 Initially, I used the Hugging Face dataset called arxiv-summarization, containing 216,000 research papers with summaries. (https://huggingface.co/datasets/ccdv/arxiv-summarization)
