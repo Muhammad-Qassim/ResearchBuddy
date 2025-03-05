@@ -1,12 +1,28 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
+import { ThemeProvider } from "@emotion/react";
+import { CssBaseline } from "@mui/material";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import theme from "./theme";
+import Homepage from "./Homepage";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+const App = () => {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+    <Router>
+      <div>
+      <Routes>
+        <Route path="/" element={<Homepage />} />
+      </Routes>
+      </div>
+    </Router>
+    </ThemeProvider>
+  );
+};
+
+const domNode = document.getElementById("root");
+const root = ReactDOM.createRoot(domNode);
+root.render(<App />);

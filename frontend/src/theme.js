@@ -23,7 +23,7 @@ const theme = createTheme({
         cursor: 'pointer', 
         "&:hover":{color:"#00bcd4"}
     },
-    aboutbody:{
+    body:{
         fontSize: '1.0rem',
     }
   },

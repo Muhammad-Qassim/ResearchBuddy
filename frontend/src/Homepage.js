@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Container, Typography } from "@mui/material";
 
-function App() {
+function Homepage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -11,11 +12,11 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <h1>ResearchBuddy AI</h1>
-      <p>Backend says what: {message}</p>
-    </div>
+    <Container>
+      <Typography variant="h3">ResearchBuddy AI</Typography>
+      <Typography variant="body">Backend says what: {message}</Typography>
+    </Container>
   );
 }
 
-export default App;
+export default Homepage;
