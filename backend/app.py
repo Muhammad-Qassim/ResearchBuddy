@@ -15,25 +15,21 @@ app = Flask(__name__)
 def home():
     return jsonify({"message": "Flask API is running! yeah!"})
 
-# PROCESSING PAPERS
-@app.route("/process-papers", methods=["GET"])
-@cross_origin(origins=['http://localhost:3000'], supports_credentials=True) 
-def process():
-    query = request.args.get('query')
-
+@app.route("/test-metadata", methods=["POST"])
+def test_metadata():
+    data = request.json
+    query = data.get('query')
+    
     if not query:
         return jsonify({"error": "No query provided!"}), 400
-    
 
-    # Get metadata from semantic scholar
+    # Fetch Metadata using Semantic Scholar
     metadata = get_metadata(query)
+    
     if not metadata:
         return jsonify({"error": "No metadata found!"}), 404
     
-    return jsonify({
-        "metadata": metadata,
-    })
-    
+    return jsonify(metadata)
 
 CORS(app)
 
