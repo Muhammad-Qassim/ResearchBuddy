@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from flask_cors import CORS, cross_origin
 from ResearchPaper.semantic_scholar import get_metadata
+from ResearchPaper.arxiv import fetch_and_store_arxiv_pdf
 
 
 load_dotenv()
@@ -30,6 +31,22 @@ def test_metadata():
         return jsonify({"error": "No metadata found!"}), 404
     
     return jsonify(metadata)
+
+@app.route("/test-arxiv", methods=["POST"])
+def test_arxiv():
+    data = request.json
+    arxiv_id = data.get('arxiv_id')
+    
+    if not arxiv_id:
+        return jsonify({"error": "No ArXiv ID provided!"}), 400
+
+    try:
+        # Fetch and store PDF using ArXiv ID
+        pdf_id = fetch_and_store_arxiv_pdf(arxiv_id, 'research_papers', 'pdfs')
+        return jsonify({"success": f"PDF successfully fetched and stored with ID: {pdf_id}"})
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
+    
 
 CORS(app)
 
