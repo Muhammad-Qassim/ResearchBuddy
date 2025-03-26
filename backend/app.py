@@ -5,6 +5,7 @@ from flask_cors import CORS, cross_origin
 from ResearchPaper.semantic_scholar import get_metadata
 from ResearchPaper.arxiv import fetch_and_store_arxiv_pdf
 from ResearchPaper.pdf_processing import extract_text_from_mongo_pdf
+from ResearchPaper.t5_summarizer import load_model, summarize_paper
 
 load_dotenv()
 
@@ -61,6 +62,23 @@ def test_pdf_processing():
         return jsonify({"success": "Text extracted successfully", "text": pdf_text[:500] + "... (truncated)"})
     except Exception as e:
         return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
+    
+model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
+
+@app.route("/test-summarization", methods=["POST"])
+def test_summarization():
+    data = request.json
+    text = data.get('text')
+
+    if not text:
+        return jsonify({"error": "No text provided!"}), 400
+
+    try:
+        # Generate summary using the T5 model
+        summary = summarize_paper(model, tokenizer, text)
+        return jsonify({"success": "Summary generated successfully", "summary": summary})
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate summary: {str(e)}"}), 500
     
 CORS(app)
 
