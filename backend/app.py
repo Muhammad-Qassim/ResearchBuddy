@@ -74,12 +74,45 @@ def test_summarization():
         return jsonify({"error": "No text provided!"}), 400
 
     try:
-        # Generate summary using the T5 model
         summary = summarize_paper(model, tokenizer, text)
         return jsonify({"success": "Summary generated successfully", "summary": summary})
     except Exception as e:
         return jsonify({"error": f"Failed to generate summary: {str(e)}"}), 500
     
+@app.route("/process-query", methods=["POST"])
+def process_query():
+    data = request.json
+    query = data.get('query')
+
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+
+    metadata = get_metadata(query)
+    if not metadata or 'arxivId' not in metadata:
+        return jsonify({"error": "No suitable paper found!"}), 404
+
+    arxiv_id = metadata['arxivId']
+
+    try:
+        pdf_id = fetch_and_store_arxiv_pdf(arxiv_id, 'research_papers', 'pdfs')
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
+
+    try:
+        pdf_text = extract_text_from_mongo_pdf('research_papers', 'pdfs', arxiv_id)
+    except Exception as e:
+        return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
+
+    summary = summarize_paper(model, tokenizer, pdf_text)
+
+    response = {
+        "metadata": metadata,
+        "summary": summary
+    }
+
+    return jsonify(response)
+
+
 CORS(app)
 
 if __name__ == "__main__":
