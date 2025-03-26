@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from flask_cors import CORS, cross_origin
 from ResearchPaper.semantic_scholar import get_metadata
 from ResearchPaper.arxiv import fetch_and_store_arxiv_pdf
-
+from ResearchPaper.pdf_processing import extract_text_from_mongo_pdf
 
 load_dotenv()
 
@@ -47,7 +47,21 @@ def test_arxiv():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
     
+@app.route("/test-pdf-processing", methods=["POST"])
+def test_pdf_processing():
+    data = request.json
+    arxiv_id = data.get('arxiv_id')
 
+    if not arxiv_id:
+        return jsonify({"error": "No ArXiv ID provided!"}), 400
+
+    try:
+        # Extract text from PDF stored in MongoDB
+        pdf_text = extract_text_from_mongo_pdf('research_papers', 'pdfs', arxiv_id)
+        return jsonify({"success": "Text extracted successfully", "text": pdf_text[:500] + "... (truncated)"})
+    except Exception as e:
+        return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
+    
 CORS(app)
 
 if __name__ == "__main__":
