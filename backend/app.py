@@ -11,7 +11,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# TESTING API
+model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
+
 @app.route("/test")
 @cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
 def home():
@@ -62,8 +63,6 @@ def test_pdf_processing():
         return jsonify({"success": "Text extracted successfully", "text": pdf_text[:500] + "... (truncated)"})
     except Exception as e:
         return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
-    
-model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
 
 @app.route("/test-summarization", methods=["POST"])
 def test_summarization():
@@ -78,8 +77,10 @@ def test_summarization():
         return jsonify({"success": "Summary generated successfully", "summary": summary})
     except Exception as e:
         return jsonify({"error": f"Failed to generate summary: {str(e)}"}), 500
-    
+
+
 @app.route("/process-query", methods=["POST"])
+@cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
 def process_query():
     data = request.json
     query = data.get('query')
@@ -112,6 +113,9 @@ def process_query():
 
     return jsonify(response)
 
+@app.route("/process-query", methods=["OPTIONS"])
+def preflight():
+    return '', 204
 
 CORS(app)
 

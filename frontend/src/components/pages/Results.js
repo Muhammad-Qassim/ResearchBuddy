@@ -106,8 +106,16 @@ function Results() {
                   <CircularProgress size={20} sx={{ color: "#00bcd4", mr: 1 }} />
                   <Typography sx={{ color: alpha("#ffffff", 0.7) }}>Checking API connection...</Typography>
                 </Box>
-              )}  
-              {apiStatus.checked && !apiStatus.online && error && (
+              )}
+  
+              {apiStatus.checked && !apiStatus.online && (
+                <Alert severity="error" sx={{ mt: 2, backgroundColor: alpha("#f44336", 0.1), color: "#f44336" }}>
+                  API server is offline. Please ensure the backend is running at{" "}
+                  {process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:5000"}
+                </Alert>
+              )}
+  
+              {error && (
                 <Alert
                   severity="error"
                   sx={{ mt: 2, backgroundColor: alpha("#f44336", 0.1), color: "#f44336" }}
