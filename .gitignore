@@ -5,3 +5,5 @@ frontend/.env
 node_modules
 
 backend/ResearchPaper/__pycache__/
+
+.vscode/

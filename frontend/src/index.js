@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 import theme from "./theme";
 import Homepage from "./components/pages/Homepage";
 import Search from "./components/pages/Search";
+import Results from "./components/pages/Results";
 
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -18,6 +19,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/results" element={<Results />} />
       </Routes>
       </div>
     </Router>
