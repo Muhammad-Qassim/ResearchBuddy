@@ -3,7 +3,8 @@ import { CssBaseline } from "@mui/material";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import theme from "./theme";
-import Homepage from "./Homepage";
+import Homepage from "./components/pages/Homepage";
+import Search from "./components/pages/Search";
 
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -16,6 +17,7 @@ const App = () => {
       <div>
       <Routes>
         <Route path="/" element={<Homepage />} />
+        <Route path="/search" element={<Search />} />
       </Routes>
       </div>
     </Router>

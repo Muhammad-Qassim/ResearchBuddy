@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, useMediaQuery, alpha } from "@mui/material"
 import { Explore, Menu as MenuIcon } from "@mui/icons-material"
