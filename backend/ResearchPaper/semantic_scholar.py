@@ -10,7 +10,7 @@ def get_metadata(query):
     params = {
         "query": query,
         "fields": "title,authors,citationCount,year,externalIds",
-        "limit": 10  # Increase limit to search through more papers
+        "limit": 30  
     }
 
     response = requests.get(url, headers=headers, params=params)
@@ -20,22 +20,18 @@ def get_metadata(query):
         
         # Filter for papers with an ArXiv ID
         arxiv_papers = [paper for paper in papers if "ArXiv" in paper["externalIds"]]
+
+        top_papers = sorted(arxiv_papers, key=lambda x: x["citationCount"], reverse=True)[:5]
         
-        if arxiv_papers:
-            # Select the paper with the highest citation count
-            paper = max(arxiv_papers, key=lambda x: x["citationCount"])
-            return {
-                "title": paper["title"],
-                "authors": [author["name"] for author in paper["authors"]],
-                "citationCount": paper["citationCount"],
-                "DOI": paper["externalIds"].get("DOI", "N/A"),
-                "year": paper["year"],
-                "arxivId": paper["externalIds"]["ArXiv"],
-                "URL": f"https://arxiv.org/pdf/{paper['externalIds']['ArXiv']}.pdf"
-            }
-        else:
-            print("No ArXiv papers found for the given query.")
-            return {}
+        return [{
+            "title": paper["title"],
+            "authors": [a["name"] for a in paper["authors"]],
+            "citationCount": paper["citationCount"],
+            "DOI": paper["externalIds"].get("DOI", "N/A"),
+            "year": paper["year"],
+            "arxivId": paper["externalIds"]["ArXiv"],
+            "URL": f"https://arxiv.org/pdf/{paper['externalIds']['ArXiv']}.pdf"
+        } for paper in top_papers]
     else:
         print(f"Error: {response.status_code}, {response.json()}")
         return {}

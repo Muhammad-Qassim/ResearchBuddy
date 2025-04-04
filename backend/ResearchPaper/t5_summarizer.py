@@ -1,8 +1,10 @@
+import os
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 def load_model(model_name):
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    token = os.getenv("HF_TOKEN")
     return model, tokenizer
 
 def summarize_paper(model, tokenizer, text):

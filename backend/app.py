@@ -11,7 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
+model, tokenizer = load_model('KASHU101/flan-t5-lora-summarization-optimized-small')
 
 @app.route("/test")
 @cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
@@ -88,30 +88,44 @@ def process_query():
     if not query:
         return jsonify({"error": "No query provided!"}), 400
 
-    metadata = get_metadata(query)
-    if not metadata or 'arxivId' not in metadata:
-        return jsonify({"error": "No suitable paper found!"}), 404
+    metadata_list = get_metadata(query)
+    if not metadata_list:
+        return jsonify({"error": "No suitable papers found!"}), 404
 
-    arxiv_id = metadata['arxivId']
+    results = []
 
-    try:
-        pdf_id = fetch_and_store_arxiv_pdf(arxiv_id, 'research_papers', 'pdfs')
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch PDF: {str(e)}"}), 500
+    for metadata in metadata_list:
+        arxiv_id = metadata['arxivId']
 
-    try:
-        pdf_text = extract_text_from_mongo_pdf('research_papers', 'pdfs', arxiv_id)
-    except Exception as e:
-        return jsonify({"error": f"Failed to extract text: {str(e)}"}), 500
+        try:
+            fetch_and_store_arxiv_pdf(arxiv_id, 'research_papers', 'pdfs')
+        except Exception as e:
+            results.append({
+                "metadata": metadata,
+                "error": f"Failed to fetch PDF: {str(e)}"
+            })
+            continue
 
-    summary = summarize_paper(model, tokenizer, pdf_text)
+        try:
+            pdf_text = extract_text_from_mongo_pdf('research_papers', 'pdfs', arxiv_id)
+        except Exception as e:
+            results.append({
+                "metadata": metadata,
+                "error": f"Failed to extract text: {str(e)}"
+            })
+            continue
 
-    response = {
-        "metadata": metadata,
-        "summary": summary
-    }
+        try:
+            summary = summarize_paper(model, tokenizer, pdf_text)
+        except Exception as e:
+            summary = f"Error summarizing: {str(e)}"
 
-    return jsonify(response)
+        results.append({
+            "metadata": metadata,
+            "summary": summary
+        })
+
+    return jsonify(results)
 
 @app.route("/process-query", methods=["OPTIONS"])
 def preflight():
