@@ -6,6 +6,7 @@ from ResearchPaper.semantic_scholar import get_metadata
 from ResearchPaper.arxiv import fetch_and_store_arxiv_pdf
 from ResearchPaper.pdf_processing import extract_text_from_mongo_pdf
 from ResearchPaper.t5_summarizer import load_model, summarize_paper
+from Github.github_api import search_top_FIVE_repos
 
 load_dotenv()
 
@@ -130,6 +131,28 @@ def process_query():
 @app.route("/process-query", methods=["OPTIONS"])
 def preflight():
     return '', 204
+
+# GitHub API route
+
+@app.route("/test-github", methods=["POST"])
+def test_github():
+    data = request.json
+    query = data.get('query')
+    
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+    
+    repo = search_top_FIVE_repos(query, sort_by="default", order="desc", num_results=5)
+
+    if not repo:
+        return jsonify({"error": "No repositories found!"}), 404
+    
+    return jsonify(repo)
+
+  
+
+
+
 
 CORS(app)
 
