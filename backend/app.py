@@ -8,12 +8,15 @@ from ResearchPaper.pdf_processing import extract_text_from_mongo_pdf
 from ResearchPaper.t5_summarizer import load_model, summarize_paper
 from Github.github_api import search_top_FIVE_repos
 from Github.readme_text import fetch_readme_text
+from Github.gemini_summarizer import summarize_repo
 
 load_dotenv()
 
 app = Flask(__name__)
 
 model, tokenizer = load_model('KASHU101/flan-t5-lora-summarization-optimized-small')
+
+gemini_model= "models/gemini-1.5-pro"
 
 @app.route("/test")
 @cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
@@ -166,7 +169,24 @@ def test_github_readme():
     
     return jsonify({"readme_text": readme_text})  
 
+@app.route("/test-github-readme-summarize", methods=["POST"])
+def test_github_readme_summarize():
+    data = request.json
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({"error": "No URL provided!"}), 400
 
+    # Fetch README text from the given URL
+    readme_text = fetch_readme_text(url)
+    
+    if not readme_text:
+        return jsonify({"error": "Failed to fetch README text!"}), 500
+
+    # Summarize the README text using the gemini API
+    summary = summarize_repo(gemini_model, readme_text)
+
+    return jsonify({"summary": summary})
 
 
 CORS(app)
