@@ -26,16 +26,23 @@ export const processQuery = async (query) => {
       throw new Error("Empty response from API")
     }
 
-    if (!data.metadata) {
-      console.error("Missing metadata in API response:", data)
-      throw new Error("No metadata found in the response")
+    // Check if the response is an array (multiple papers)
+    if (Array.isArray(data)) {
+      // Validate each item in the array
+      data.forEach((item, index) => {
+        if (!item.metadata) {
+          console.warn(`Missing metadata in result ${index}:`, item)
+        }
+      })
+      return data
+    } else {
+      // Handle single result (for backward compatibility)
+      if (!data.metadata) {
+        console.error("Missing metadata in API response:", data)
+        throw new Error("No metadata found in the response")
+      }
+      return [data] // Convert to array for consistent handling
     }
-
-    if (!data.summary) {
-      console.warn("Missing summary in API response:", data)
-    }
-
-    return data
   } catch (error) {
     console.error("API Error:", error)
     throw error

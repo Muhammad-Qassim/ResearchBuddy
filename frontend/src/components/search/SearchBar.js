@@ -32,7 +32,7 @@ const SearchBar = ({ initialQuery = "", onSearch, variant = "large" }) => {
           backgroundColor: alpha("#1e1e1e", 0.7),
           borderRadius: "24px",
           p: 1,
-          mb: 6,
+          mb: 2,
           border: "1px solid rgba(255,255,255,0.1)",
           backdropFilter: "blur(10px)",
           boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
