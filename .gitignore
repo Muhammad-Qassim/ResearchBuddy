@@ -7,3 +7,5 @@ node_modules
 backend/ResearchPaper/__pycache__/
 
 .vscode/
+
+backend/Github/__pycache__/

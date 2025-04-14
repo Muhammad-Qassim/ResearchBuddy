@@ -7,6 +7,7 @@ from ResearchPaper.arxiv import fetch_and_store_arxiv_pdf
 from ResearchPaper.pdf_processing import extract_text_from_mongo_pdf
 from ResearchPaper.t5_summarizer import load_model, summarize_paper
 from Github.github_api import search_top_FIVE_repos
+from Github.readme_text import fetch_readme_text
 
 load_dotenv()
 
@@ -149,7 +150,21 @@ def test_github():
     
     return jsonify(repo)
 
-  
+@app.route("/test-github-readme", methods=["POST"])
+def test_github_readme():
+    data = request.json
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({"error": "No URL provided!"}), 400
+
+    # Fetch README text from the given URL
+    readme_text = fetch_readme_text(url)
+    
+    if not readme_text:
+        return jsonify({"error": "Failed to fetch README text!"}), 500
+    
+    return jsonify({"readme_text": readme_text})  
 
 
 
