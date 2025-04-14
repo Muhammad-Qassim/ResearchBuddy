@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 model, tokenizer = load_model('KASHU101/flan-t5-lora-summarization-optimized-small')
 
-gemini_model= "models/gemini-1.5-pro"
+gemini_model= "models/gemini-2.0-flash"
 
 @app.route("/test")
 @cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
@@ -187,6 +187,47 @@ def test_github_readme_summarize():
     summary = summarize_repo(gemini_model, readme_text)
 
     return jsonify({"summary": summary})
+
+@app.route("/process-github-query", methods=["POST"])
+@cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
+def process_github_query():
+    data = request.json
+    query = data.get('query')
+
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+
+    # Search for top repositories on GitHub
+    repo = search_top_FIVE_repos(query, sort_by="default", order="desc", num_results=5)
+
+    if not repo:
+        return jsonify({"error": "No repositories found!"}), 404
+
+    results = []
+
+    for repository in repo:
+        readme_url = repository["Readme"]
+        readme_text = fetch_readme_text(readme_url)
+
+        if not readme_text:
+            results.append({
+                "repository": repository,
+                "error": "Failed to fetch README text!"
+            })
+            continue
+
+        summary = summarize_repo(gemini_model, readme_text)
+
+        results.append({
+            "repository": repository,
+            "summary": summary
+        })
+
+    return jsonify(results)
+
+@app.route("/process-github-query", methods=["OPTIONS"])
+def preflight_github():
+    return '', 204
 
 
 CORS(app)
