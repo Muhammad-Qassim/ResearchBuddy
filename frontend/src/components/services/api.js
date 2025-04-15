@@ -49,6 +49,39 @@ export const processQuery = async (query) => {
   }
 }
 
+export const processGithubQuery = async (query) => {
+  try {
+    console.log(`Sending request to ${API_BASE_URL}/process-github-query with query: ${query}`)
+
+    const response = await fetch(`${API_BASE_URL}/process-github-query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+      credentials: "include",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || `Failed to process GitHub query: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("GitHub API response data:", data)
+
+    // Validate the response structure
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error("No GitHub repositories found for this query")
+    }
+
+    return data
+  } catch (error) {
+    console.error("GitHub API Error:", error)
+    throw error
+  }
+}
+
 export const testConnection = async () => {
   try {
     console.log(`Testing connection to ${API_BASE_URL}/test`)
@@ -69,6 +102,6 @@ export const testConnection = async () => {
 
 export default {
   processQuery,
+  processGithubQuery,
   testConnection,
 }
-
