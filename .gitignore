@@ -15,3 +15,5 @@ frontend/package-lock.json
 frontend/package.json
 
 backend/Wikipedia/__pycache__/
+
+backend/Youtube/__pycache__/

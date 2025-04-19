@@ -116,7 +116,7 @@ function Results() {
           overflow: "hidden",
         }}
       >
-        <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", py: 3, mt: 2 }}>
+        <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", py: 3}}>
           {!apiStatus.checked && (
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
               <CircularProgress size={20} sx={{ color: "#00bcd4", mr: 1 }} />

@@ -47,7 +47,7 @@ const SummaryCard = ({ summary }) => {
             backgroundColor: alpha("#ffffff", 0.03),
             borderRadius: "8px",
             border: "1px solid rgba(255,255,255,0.05)",
-            height: "100%",
+            height: "500px",
             overflow: "auto",
           }}
         >
