@@ -9,12 +9,16 @@ from ResearchPaper.t5_summarizer import load_model, summarize_paper
 from Github.github_api import search_top_FIVE_repos
 from Github.readme_text import fetch_readme_text
 from Github.gemini_summarizer import summarize_repo
+from Wikipedia.wiki import get_wikipedia_intro
+from Wikipedia.wiki import get_wikipedia_related_topics
+from Youtube.youtube_api import fetch_youtube_FIVE_video
+from Youtube.youtube_api import fetch_youtube_transcript
 
 load_dotenv()
 
 app = Flask(__name__)
 
-model, tokenizer = load_model('KASHU101/flan-t5-lora-summarization-optimized-small')
+model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
 
 gemini_model= "models/gemini-2.0-flash"
 
@@ -228,6 +232,75 @@ def process_github_query():
 @app.route("/process-github-query", methods=["OPTIONS"])
 def preflight_github():
     return '', 204
+
+# WIKIPEDIA API route
+
+@app.route("/test-wikipedia", methods=["POST"])
+def test_wikipedia():
+    data = request.json
+    query = data.get('query')
+    
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+
+    # Fetch summary from Wikipedia
+    summary = get_wikipedia_intro(query)
+    
+    if not summary:
+        return jsonify({"error": "No summary found!"}), 404
+    
+    return jsonify({"summary": summary})
+
+@app.route("/test-wikipedia-related-topics", methods=["POST"])
+def test_wikipedia_related_topics():
+    data = request.json
+    query = data.get('query')
+    
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+
+    # Fetch related topics from Wikipedia
+    related_topics = get_wikipedia_related_topics(query)
+    
+    if not related_topics:
+        return jsonify({"error": "No related topics found!"}), 404
+    
+    return jsonify({"related_topics": related_topics})
+
+
+# Youtube
+
+@app.route("/test-youtube", methods=["POST"])
+def test_youtube():
+    data = request.json
+    query = data.get('query')
+    
+    if not query:
+        return jsonify({"error": "No query provided!"}), 400
+
+    # Fetch top 5 YouTube videos based on the query
+    videos = fetch_youtube_FIVE_video(query, max_results=5)
+    
+    if not videos:
+        return jsonify({"error": "No videos found!"}), 404
+    
+    return jsonify(videos)
+
+@app.route("/test-youtube-transcript", methods=["POST"])
+def test_transcript():
+    data = request.json
+    video_id = data.get('video_id')
+
+    if not video_id:
+        return jsonify({"error": "No video ID provided!"}), 400
+    
+    transcript = fetch_youtube_transcript(video_id)
+
+    if not transcript:
+        return jsonify({"error": "No transcript found!"}), 404
+    
+    return jsonify({"transcript": transcript})
+
 
 
 CORS(app)

@@ -13,3 +13,5 @@ backend/Github/__pycache__/
 frontend/package-lock.json
 
 frontend/package.json
+
+backend/Wikipedia/__pycache__/
