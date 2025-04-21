@@ -17,3 +17,9 @@ frontend/package.json
 backend/Wikipedia/__pycache__/
 
 backend/Youtube/__pycache__/
+
+backend/Qdrant/__pycache__/
+
+backend/Chatbot/__pycache__/
+
+backend/Qdrant/data/
