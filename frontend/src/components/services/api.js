@@ -100,8 +100,54 @@ export const testConnection = async () => {
   }
 }
 
+export const initChatbot = async (topic) => {
+  try {
+    console.log(`Initializing chatbot for topic: ${topic}`)
+    const response = await fetch(`${API_BASE_URL}/chatbot/init?topic=${encodeURIComponent(topic)}`, {
+      credentials: "include",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to initialize chatbot: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Chatbot initialization response:", data)
+    return data
+  } catch (error) {
+    console.error("Chatbot initialization error:", error)
+    throw error
+  }
+}
+
+export const queryChatbot = async (query, topic) => {
+  try {
+    console.log(`Sending chatbot query: ${query} for topic: ${topic}`)
+
+    const response = await fetch(`${API_BASE_URL}/chatbot/query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, topic }),
+      credentials: "include",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to query chatbot: ${response.status} ${response.statusText}`)
+    }
+
+    return response
+  } catch (error) {
+    console.error("Chatbot query error:", error)
+    throw error
+  }
+}
+
 export default {
   processQuery,
   processGithubQuery,
   testConnection,
+  initChatbot,
+  queryChatbot,
 }
