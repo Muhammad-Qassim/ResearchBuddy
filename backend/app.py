@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request, stream_with_context
 from dotenv import load_dotenv
 from flask_cors import CORS, cross_origin
 from ResearchPaper.semantic_scholar import get_metadata
@@ -13,12 +13,13 @@ from Wikipedia.wiki import get_wikipedia_intro
 from Wikipedia.wiki import get_wikipedia_related_topics
 from Youtube.youtube_api import fetch_youtube_FIVE_video
 from Youtube.youtube_api import fetch_youtube_transcript
+from Chatbot.rag_handler import run_rag_query
 
 load_dotenv()
 
 app = Flask(__name__)
 
-model, tokenizer = load_model('KASHU101/lora-flan-t5-large')
+model, tokenizer = load_model('KASHU101/flan-t5-lora-summarization-optimized-small')
 
 gemini_model= "models/gemini-2.0-flash"
 
@@ -300,6 +301,38 @@ def test_transcript():
         return jsonify({"error": "No transcript found!"}), 404
     
     return jsonify({"transcript": transcript})
+
+
+# Chatbot API route
+
+@app.route("/chatbot/init", methods=["GET"])
+@cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
+def chatbot_init():
+    topic = request.args.get("topic", default="your topic")
+    welcome_message = f"Welcome to ResearchBuddy! What do you want to know about {topic}?"
+    return jsonify({"message": welcome_message})
+
+@app.route("/chatbot/query", methods=["POST"])
+@cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
+def chatbot_query():
+    data = request.get_json()
+    user_query = data.get("query")
+    topic = data.get("topic")
+
+    if not user_query or not topic:
+        return jsonify({"error": "Both 'query' and 'topic' are required."}), 400
+
+    def generate():
+        result = run_rag_query(user_query, topic)
+        for chunk in result["response"].split("\n"):
+            yield f"data: {chunk}\n\n"
+        yield f"data: [END]\n\n"
+
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
+
+@app.route("/chatbot/query", methods=["OPTIONS"])
+def preflight_chatbot():
+    return '', 204
 
 
 
