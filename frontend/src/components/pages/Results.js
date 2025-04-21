@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
-import { Typography, Box, alpha, Alert, CircularProgress, Container } from "@mui/material"
+import { Typography, Box, alpha, Alert, CircularProgress, Container, Paper } from "@mui/material"
+import { CloudOff, ErrorOutline } from "@mui/icons-material"
 import { useLocation } from "react-router-dom"
 import { processQuery, processGithubQuery, testConnection } from "../services/api"
 import MainLayout from "../layout/MainLayout"
@@ -51,7 +52,7 @@ function Results() {
       if (apiStatus.online) {
         fetchResults(queryParam, newSearchTypes)
       } else if (apiStatus.checked) {
-        setError("API server is offline. Please try again later.")
+        setError("API server is offline. Please ensure the backend is running.")
       }
     }
   }, [location.search, apiStatus])
@@ -60,8 +61,8 @@ function Results() {
     setLoading(true)
     setError(null)
 
-    if (types.papers) setPaperResults([])
-    if (types.github) setGithubResults([])
+    let localPaperResults = []
+    let localGithubResults = []
 
     try {
       const promises = []
@@ -69,22 +70,28 @@ function Results() {
       if (types.papers) {
         promises.push(
           processQuery(searchQuery)
-            .then((data) => setPaperResults(data))
+            .then((data) => {
+              localPaperResults = data
+              setPaperResults(data)
+            })
             .catch((err) => {
               console.error("Error fetching paper results:", err)
               return null
-            }),
+            })
         )
       }
 
       if (types.github) {
         promises.push(
           processGithubQuery(searchQuery)
-            .then((data) => setGithubResults(data))
+            .then((data) => {
+              localGithubResults = data
+              setGithubResults(data)
+            })
             .catch((err) => {
               console.error("Error fetching GitHub results:", err)
               return null
-            }),
+            })
         )
       }
       await Promise.all(promises)
@@ -92,9 +99,9 @@ function Results() {
       if (
         promises.length > 0 &&
         types.papers &&
-        paperResults.length === 0 &&
+        localPaperResults.length === 0 &&
         types.github &&
-        githubResults.length === 0
+        localGithubResults.length === 0
       ) {
         throw new Error("No results found for your query")
       }
@@ -106,48 +113,145 @@ function Results() {
     }
   }
 
+  const renderContent = () => {
+    if (!apiStatus.checked) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <LoadingAnimation />
+          <Typography variant="h6" sx={{ color: alpha("#ffffff", 0.7), mt: 2 }}>
+            Checking API connection...
+          </Typography>
+        </Box>
+      )
+    }
+
+    if (!apiStatus.online) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              backgroundColor: alpha("#1e1e1e", 0.5),
+              borderRadius: "16px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              maxWidth: "600px",
+              textAlign: "center",
+            }}
+          >
+            <CloudOff sx={{ fontSize: 60, color: "#e91e63", mb: 2 }} />
+            <Typography variant="h5" sx={{ color: "#ffffff", mb: 2 }}>
+              Backend Connection Issue
+            </Typography>
+            <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.7), mb: 3 }}>
+              We couldn't connect to the Research Buddy backend service. Please ensure the backend is running at{" "}
+              {process.env.REACT_APP_BACKEND_URL}
+            </Typography>
+            <Typography variant="body2" sx={{ color: alpha("#ffffff", 0.5) }}>
+              If you're a developer, check the console for more details.
+            </Typography>
+          </Paper>
+        </Box>
+      )
+    }
+    if (loading) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <LoadingAnimation />
+        </Box>
+      )
+    }
+
+    if (error) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              backgroundColor: alpha("#1e1e1e", 0.5),
+              borderRadius: "16px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              maxWidth: "600px",
+              textAlign: "center",
+            }}
+          >
+            <ErrorOutline sx={{ fontSize: 60, color: "#e91e63", mb: 2 }} />
+            <Typography variant="h5" sx={{ color: "#ffffff", mb: 2 }}>
+              Error
+            </Typography>
+            <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.7) }}>
+              {error}
+            </Typography>
+          </Paper>
+        </Box>
+      )
+    }
+
+    if (paperResults.length > 0 || githubResults.length > 0) {
+      return <PaginatedResults paperResults={paperResults} githubResults={githubResults} originalQuery={query} />
+    }
+
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Typography variant="h6" sx={{ color: alpha("#ffffff", 0.7) }}>
+          Enter a search query to see results
+        </Typography>
+      </Box>
+    )
+  }
+
   return (
     <MainLayout simpleFooter={true}>
       <Box
         sx={{
-          height: "calc(100vh - 70px)", // Adjust for navbar and footer
+          height: "calc(100vh - 70px)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
         }}
       >
-        <Container maxWidth="lg" sx={{ flexGrow: 1, display: "flex", flexDirection: "column", py: 3}}>
-          {!apiStatus.checked && (
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
-              <CircularProgress size={20} sx={{ color: "#00bcd4", mr: 1 }} />
-              <Typography sx={{ color: alpha("#ffffff", 0.7) }}>Checking API connection...</Typography>
-            </Box>
-          )}
-
-          {apiStatus.checked && !apiStatus.online && (
-            <Alert severity="error" sx={{ m: 2, backgroundColor: alpha("#f44336", 0.1), color: "#f44336" }}>
-              API server is offline. Please ensure the backend is running at{" "}
-              {process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:5000"}
-            </Alert>
-          )}
-
-          {error && (
-            <Alert severity="error" sx={{ m: 2, backgroundColor: alpha("#f44336", 0.1), color: "#f44336" }}>
-              {error}
-            </Alert>
-          )}
-
-          {loading ? (
-            <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <LoadingAnimation />
-            </Box>
-          ) : (
-            <Box sx={{ height: "100%", marginTop: 8 }}>
-              {(paperResults.length > 0 || githubResults.length > 0) && (
-                <PaginatedResults paperResults={paperResults} githubResults={githubResults} />
-              )}
-            </Box>
-          )}
+        <Container maxWidth="lg" sx={{ height: "90%", py: 3, marginTop: 8 }}>
+          {renderContent()}
         </Container>
       </Box>
     </MainLayout>
