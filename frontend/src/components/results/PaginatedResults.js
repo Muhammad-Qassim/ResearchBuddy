@@ -4,15 +4,30 @@ import MetadataCard from "../research paper/MetadataCard"
 import SummaryCard from "../research paper/SummaryCard"
 import GitHubRepoCard from "../github/GitHubRepoCard"
 import GitHubSummaryCard from "../github/GitHubSummaryCard"
-import { MenuBook, GitHub } from "@mui/icons-material"
+import ChatBot from "../buddy/Chatbot"
+import { MenuBook, GitHub, Chat } from "@mui/icons-material"
 
-const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
+const PaginatedResults = ({ paperResults = [], githubResults = [], originalQuery = "" }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [page, setPage] = useState(1)
   const resultsPerPage = 1
 
-  const currentResults = activeTab === 0 ? paperResults : githubResults
-  const totalPages = Math.ceil(currentResults.length / resultsPerPage)
+  // Calculate total pages based on active tab
+  const getTabResults = () => {
+    switch (activeTab) {
+      case 0:
+        return paperResults
+      case 1:
+        return githubResults
+      case 2:
+        return [{ id: "chatbot" }] 
+      default:
+        return []
+    }
+  }
+
+  const currentResults = getTabResults()
+  const totalPages = activeTab === 2 ? 1 : Math.ceil(currentResults.length / resultsPerPage)
 
   useEffect(() => {
     setPage(1)
@@ -38,7 +53,6 @@ const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
         height: "100%",
       }}
     >
-      {/* Tabs for switching between research papers and GitHub repos */}
       <Box sx={{ mb: 3 }}>
         <Tabs
           value={activeTab}
@@ -47,12 +61,12 @@ const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
           centered
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: activeTab === 0 ? "#00bcd4" : "#6e5494",
+              backgroundColor: activeTab === 0 ? "#00bcd4" : activeTab === 1 ? "#6e5494" : "#9c27b0",
             },
             "& .MuiTab-root": {
               color: alpha("#ffffff", 0.7),
               "&.Mui-selected": {
-                color: activeTab === 0 ? "#00bcd4" : "#6e5494",
+                color: activeTab === 0 ? "#00bcd4" : activeTab === 1 ? "#6e5494" : "#9c27b0",
               },
             },
           }}
@@ -81,10 +95,21 @@ const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
             }}
             disabled={githubResults.length === 0}
           />
+          <Tab
+            icon={<Chat />}
+            label="BUDDY"
+            iconPosition="start"
+            sx={{
+              textTransform: "none",
+              minHeight: "48px",
+              py: 1,
+              fontWeight: "bold",
+            }}
+          />
         </Tabs>
       </Box>
 
-      {totalPages > 1 && (
+      {activeTab !== 2 && totalPages > 1 && (
         <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
           <Pagination
             count={totalPages}
@@ -111,7 +136,7 @@ const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
         </Box>
       )}
 
-      {currentResults.length === 0 && (
+      {activeTab !== 2 && currentResults.length === 0 && (
         <Box
           sx={{
             backgroundColor: alpha("#1e1e1e", 0.5),
@@ -131,7 +156,13 @@ const PaginatedResults = ({ paperResults = [], githubResults = [] }) => {
         </Box>
       )}
 
-      {currentPageResults.length > 0 && (
+      {activeTab === 2 && (
+        <Box sx={{ flexGrow: 1, height: "calc(100% - 48px)" }}>
+          <ChatBot topic={originalQuery || "research"} />
+        </Box>
+      )}
+
+      {activeTab !== 2 && currentPageResults.length > 0 && (
         <Grid container spacing={3} sx={{ flexGrow: 1, height: "calc(100% - 120px)" }}>
           <Grid item xs={12} md={3} sx={{ height: "100%" }}>
             <Box sx={{ height: "100%" }}>
