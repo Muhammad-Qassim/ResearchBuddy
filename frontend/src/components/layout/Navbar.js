@@ -45,9 +45,6 @@ const Navbar = ({ transparent = false, activeSection = null }) => {
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Hexagon size={40} color="#ffca00" sx={{ mr: 2 }}>
-              <Explore sx={{ color: "rgb(15 23 42)" }} />
-            </Hexagon>
             <Typography
               variant="h6"
               component={Link}
@@ -134,20 +131,6 @@ const Navbar = ({ transparent = false, activeSection = null }) => {
                   </Button>
                 </>
               )}
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#00bcd4",
-                  borderRadius: "24px",
-                  textTransform: "none",
-                  px: 3,
-                  "&:hover": {
-                    backgroundColor: alpha("#00bcd4", 0.8),
-                  },
-                }}
-              >
-                Login
-              </Button>
             </Box>
           )}
         </Toolbar>
