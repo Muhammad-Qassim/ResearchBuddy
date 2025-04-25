@@ -159,11 +159,6 @@ const ChatBot = ({ topic = "research" }) => {
         <Typography variant="h6" sx={{ color: "#6e5494", fontWeight: "bold" }}>
           Research Buddy
         </Typography>
-        {topic && (
-          <Typography variant="body2" sx={{ color: alpha("#ffffff", 0.7), ml: 2 }}>
-            Topic: {topic}
-          </Typography>
-        )}
       </Box>
 
       <Box

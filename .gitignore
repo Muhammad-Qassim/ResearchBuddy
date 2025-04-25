@@ -23,3 +23,7 @@ backend/Qdrant/__pycache__/
 backend/Chatbot/__pycache__/
 
 backend/Qdrant/data/
+
+backend/Qdrant/data2/
+
+backend/Overview/__pycache__/

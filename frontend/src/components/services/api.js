@@ -143,6 +143,33 @@ export const queryChatbot = async (query, topic) => {
     throw error
   }
 }
+export const getTopicOverview = async (topic) => {
+  try {
+    console.log(`Sending request to ${API_BASE_URL}/overview with topic: ${topic}`)
+
+    const response = await fetch(`${API_BASE_URL}/overview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ topic }),
+      credentials: "include",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || `Failed to get topic overview: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Overview API response data:", data)
+
+    return data
+  } catch (error) {
+    console.error("Overview API Error:", error)
+    throw error
+  }
+}
 
 export default {
   processQuery,
@@ -150,4 +177,6 @@ export default {
   testConnection,
   initChatbot,
   queryChatbot,
+  getTopicOverview,
+  
 }

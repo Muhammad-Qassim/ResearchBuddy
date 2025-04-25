@@ -1,53 +1,9 @@
 import { Card, CardContent, Box, Typography, Avatar, Divider, Paper, alpha } from "@mui/material"
-import { MenuBook } from "@mui/icons-material"
+import { Public } from "@mui/icons-material"
 import ReactMarkdown from "react-markdown"
 
-function normalizeSummary(summary) {
-  if (!summary) return "No summary available for this paper."
-
-  const headingMap = {
-    "main research objective": "Main Research Objective",
-    "research objective": "Main Research Objective",
-    "methodology": "Methodology",
-    "key findings": "Key Findings",
-    "findings": "Key Findings",
-    "conclusions": "Conclusions",
-    "conclusion": "Conclusions",
-  }
-
-  return summary
-    // Remove numbered prefixes like 1. or **2.
-    .replace(/(\*\*\s*)?\d+\.\s*/g, "")
-    // Remove trailing or broken asterisks
-    .replace(/\*{2,}/g, "")
-    // Use proper markdown headings
-    .replace(
-      /(Main Research Objective|Research Objective|Methodology|Key Findings|Findings|Conclusions|Conclusion)\s*:?(\s*\*)?/gi,
-      (_, heading) => `\n### ${headingMap[heading.toLowerCase()]}\n`
-    )
-    // Break up inline bullet points
-    .replace(/(?<!\n)\s*\*\s+/g, "\n* ")
-    // Split and clean up
-    .split("\n")
-    .map(line => {
-      const trimmed = line.trim()
-      if (trimmed.startsWith("###") || trimmed.startsWith("*")) return trimmed
-      if (trimmed.length > 0) return `* ${trimmed}`
-      return ""
-    })
-    .filter(line => line.length > 0)
-    .join("\n\n")
-}
-
-
-
-
-
-
-
-
-const SummaryCard = ({ summary }) => {
-  const formattedSummary = normalizeSummary(summary)
+const WikipediaSummaryCard = ({ summary, topic }) => {
+  const formattedSummary = summary || "No summary available for this topic."
 
   return (
     <Card
@@ -55,28 +11,28 @@ const SummaryCard = ({ summary }) => {
       sx={{
         height: "100%",
         backgroundColor: alpha("#1e1e1e", 0.5),
-        border: `1px solid ${alpha("#00bcd4", 0.2)}`,
+        border: `1px solid ${alpha("#3f51b5", 0.2)}`,
         borderRadius: "16px",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <CardContent sx={{ p: 3, paddingBottom: 0, flexGrow: 0 }}>
+      <CardContent sx={{ p: 3, flexGrow: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Avatar
             sx={{
-              bgcolor: alpha("#00bcd4", 0.1),
-              color: "#00bcd4",
+              bgcolor: alpha("#3f51b5", 0.1),
+              color: "#3f51b5",
               width: 40,
               height: 40,
               mr: 2,
             }}
           >
-            <MenuBook />
+            <Public />
           </Avatar>
-          <Typography variant="h6" component="h2" sx={{ fontWeight: "bold", color: "#00bcd4" }}>
-            Paper Summary
+          <Typography variant="h6" component="h2" sx={{ fontWeight: "bold", color: "#3f51b5" }}>
+            Topic Overview
           </Typography>
         </Box>
 
@@ -87,8 +43,7 @@ const SummaryCard = ({ summary }) => {
         <Paper
           elevation={0}
           sx={{
-            p:3,
-            paddingTop: 0,
+            p: 3,
             backgroundColor: alpha("#ffffff", 0.03),
             borderRadius: "8px",
             border: "1px solid rgba(255,255,255,0.05)",
@@ -113,7 +68,7 @@ const SummaryCard = ({ summary }) => {
                 <Typography
                   variant="h5"
                   sx={{
-                    color: "#00bcd4",
+                    color: "#3f51b5",
                     fontWeight: "bold",
                     mt: 3,
                     mb: 2,
@@ -125,7 +80,7 @@ const SummaryCard = ({ summary }) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: "#00bcd4",
+                    color: "#3f51b5",
                     fontWeight: "bold",
                     mt: 2,
                     mb: 1,
@@ -167,4 +122,4 @@ const SummaryCard = ({ summary }) => {
   )
 }
 
-export default SummaryCard
+export default WikipediaSummaryCard

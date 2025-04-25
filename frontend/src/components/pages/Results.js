@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Typography, Box, alpha, Alert, CircularProgress, Container, Paper } from "@mui/material"
 import { CloudOff, ErrorOutline } from "@mui/icons-material"
 import { useLocation } from "react-router-dom"
-import { processQuery, processGithubQuery, testConnection } from "../services/api"
+import { processQuery, processGithubQuery, testConnection, getTopicOverview } from "../services/api"
 import MainLayout from "../layout/MainLayout"
 import LoadingAnimation from "../common/LoadingAnimation"
 import PaginatedResults from "../results/PaginatedResults"
@@ -13,6 +13,7 @@ function Results() {
   const [error, setError] = useState(null)
   const [paperResults, setPaperResults] = useState([])
   const [githubResults, setGithubResults] = useState([])
+  const [topicOverview, setTopicOverview] = useState(null)
   const [searchTypes, setSearchTypes] = useState({
     papers: true,
     github: true,
@@ -94,6 +95,18 @@ function Results() {
             })
         )
       }
+
+      promises.push(
+        getTopicOverview(searchQuery)
+          .then((overviewData) => {
+            setTopicOverview(overviewData)
+          })
+          .catch((err) => {
+            console.error("Error fetching topic overview:", err)
+            return null
+          })
+      )
+
       await Promise.all(promises)
 
       if (
@@ -220,7 +233,7 @@ function Results() {
     }
 
     if (paperResults.length > 0 || githubResults.length > 0) {
-      return <PaginatedResults paperResults={paperResults} githubResults={githubResults} originalQuery={query} />
+      return <PaginatedResults paperResults={paperResults} githubResults={githubResults} originalQuery={query} overview={topicOverview}/>
     }
 
     return (

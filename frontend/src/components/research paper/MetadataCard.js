@@ -51,15 +51,16 @@ const MetadataCard = ({ metadata }) => {
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3, flexGrow: 1 }}>
           <Box>
-            <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.9), fontWeight: "bold" }}>
-              Title: {title}
+          <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.9), fontWeight: "bold", fontSize: "0.8rem" , textAlign:"center"}}>
+              {title}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Person sx={{ color: "#00bcd4", mr: 1, fontSize: "1rem" }} />
             <Typography variant="body2" sx={{ color: alpha("#ffffff", 0.7) }}>
-              Authors: {authors.join(", ")}
+            {authors.slice(0, 2).join(", ")}
+            {authors.length > 2 && " et al."}
             </Typography>
           </Box>
 

@@ -48,8 +48,8 @@ const GitHubRepoCard = ({ repository }) => {
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3, flexGrow: 1 }}>
           <Box>
-            <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.9), fontWeight: "bold" }}>
-              Repo: {name}
+            <Typography variant="body1" sx={{ color: alpha("#ffffff", 0.9), fontWeight: "bold", fontSize: "0.8rem" , textAlign:"center"}}>
+              {name}
             </Typography>
           </Box>
 
