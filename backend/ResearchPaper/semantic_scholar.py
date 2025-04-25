@@ -1,5 +1,12 @@
 import requests
 import os
+from ratelimit import limits, sleep_and_retry
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+
+
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
 BASE_URL = "https://api.semanticscholar.org/graph/v1"
