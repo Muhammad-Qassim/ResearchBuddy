@@ -9,11 +9,12 @@ from ResearchPaper.t5_summarizer import load_model, summarize_paper
 from Github.github_api import search_top_FIVE_repos
 from Github.readme_text import fetch_readme_text
 from Github.gemini_summarizer import summarize_repo
-from Wikipedia.wiki import get_wikipedia_intro
-from Wikipedia.wiki import get_wikipedia_related_topics
+from Overview.overview import get_wikipedia_intro
+from Overview.overview import get_related_topics_from_qdrant
 from Youtube.youtube_api import fetch_youtube_FIVE_video
 from Youtube.youtube_api import fetch_youtube_transcript
 from Chatbot.rag_handler import run_rag_query
+from ResearchPaper.remote_summarizer import summarize_remotely
 
 load_dotenv()
 
@@ -126,7 +127,7 @@ def process_query():
             continue
 
         try:
-            summary = summarize_paper(model, tokenizer, pdf_text)
+            summary = summarize_remotely(pdf_text)
         except Exception as e:
             summary = f"Error summarizing: {str(e)}"
 
@@ -252,21 +253,21 @@ def test_wikipedia():
     
     return jsonify({"summary": summary})
 
-@app.route("/test-wikipedia-related-topics", methods=["POST"])
-def test_wikipedia_related_topics():
-    data = request.json
-    query = data.get('query')
-    
-    if not query:
-        return jsonify({"error": "No query provided!"}), 400
+@app.route("/overview", methods=["POST"])
+@cross_origin(origins=['http://localhost:3000'], supports_credentials=True)
+def overview():
+    topic = request.json.get("topic")
+    if not topic:
+        return jsonify({"error": "No topic provided!"}), 400
+    summary = get_wikipedia_intro(topic)
+    related_topics = get_related_topics_from_qdrant(topic)
 
-    # Fetch related topics from Wikipedia
-    related_topics = get_wikipedia_related_topics(query)
-    
-    if not related_topics:
-        return jsonify({"error": "No related topics found!"}), 404
-    
-    return jsonify({"related_topics": related_topics})
+    if not summary:
+        return jsonify({"error": "No summary found!"}), 404
+    return jsonify({
+        "summary": summary,
+        "related_topics": related_topics
+    })
 
 
 # Youtube
