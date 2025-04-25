@@ -2,8 +2,52 @@ import { Card, CardContent, Box, Typography, Avatar, Divider, Paper, alpha } fro
 import { MenuBook } from "@mui/icons-material"
 import ReactMarkdown from "react-markdown"
 
+function normalizeSummary(summary) {
+  if (!summary) return "No summary available for this paper."
+
+  const headingMap = {
+    "main research objective": "Main Research Objective",
+    "research objective": "Main Research Objective",
+    "methodology": "Methodology",
+    "key findings": "Key Findings",
+    "findings": "Key Findings",
+    "conclusions": "Conclusions",
+    "conclusion": "Conclusions",
+  }
+
+  return summary
+    // Remove numbered prefixes like 1. or **2.
+    .replace(/(\*\*\s*)?\d+\.\s*/g, "")
+    // Remove trailing or broken asterisks
+    .replace(/\*{2,}/g, "")
+    // Use proper markdown headings
+    .replace(
+      /(Main Research Objective|Research Objective|Methodology|Key Findings|Findings|Conclusions|Conclusion)\s*:?(\s*\*)?/gi,
+      (_, heading) => `\n### ${headingMap[heading.toLowerCase()]}\n`
+    )
+    // Break up inline bullet points
+    .replace(/(?<!\n)\s*\*\s+/g, "\n* ")
+    // Split and clean up
+    .split("\n")
+    .map(line => {
+      const trimmed = line.trim()
+      if (trimmed.startsWith("###") || trimmed.startsWith("*")) return trimmed
+      if (trimmed.length > 0) return `* ${trimmed}`
+      return ""
+    })
+    .filter(line => line.length > 0)
+    .join("\n\n")
+}
+
+
+
+
+
+
+
+
 const SummaryCard = ({ summary }) => {
-  const formattedSummary = summary || "No summary available for this paper."
+  const formattedSummary = normalizeSummary(summary)
 
   return (
     <Card
@@ -18,7 +62,7 @@ const SummaryCard = ({ summary }) => {
         flexDirection: "column",
       }}
     >
-      <CardContent sx={{ p: 3, flexGrow: 0 }}>
+      <CardContent sx={{ p: 3, paddingBottom: 0, flexGrow: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Avatar
             sx={{
@@ -43,7 +87,8 @@ const SummaryCard = ({ summary }) => {
         <Paper
           elevation={0}
           sx={{
-            p: 3,
+            p:3,
+            paddingTop: 0,
             backgroundColor: alpha("#ffffff", 0.03),
             borderRadius: "8px",
             border: "1px solid rgba(255,255,255,0.05)",

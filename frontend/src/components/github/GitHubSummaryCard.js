@@ -19,7 +19,7 @@ const GitHubSummaryCard = ({ summary }) => {
         flexDirection: "column",
       }}
     >
-      <CardContent sx={{ p: 3, flexGrow: 0 }}>
+      <CardContent sx={{ p: 3, paddingBottom:0, flexGrow: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Avatar
             sx={{
