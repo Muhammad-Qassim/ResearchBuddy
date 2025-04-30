@@ -127,7 +127,7 @@ def process_query():
             continue
 
         try:
-            summary = summarize_remotely(pdf_text)
+            summary = summarize_paper(model, tokenizer, pdf_text)
         except Exception as e:
             summary = f"Error summarizing: {str(e)}"
 

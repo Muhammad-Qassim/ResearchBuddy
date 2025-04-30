@@ -1,10 +1,10 @@
 import requests
 import os
-GCP_API_URL = os.getenv("GCP_API_URL")
+WEBAI_API_URL = os.getenv("WEBAI_API_URL")
 
 def summarize_remotely(text):
     try:
-        response = requests.post(GCP_API_URL, json={"text": text})
+        response = requests.post(WEBAI_API_URL, json={"text": text})
         if response.status_code == 200:
             return response.json().get("summary", "")
         else:
