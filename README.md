@@ -91,6 +91,8 @@ ResearchBuddy/
 
 - HomePage
 ![image](/Phase-1+2+3/Screenshots/homepage.png)
+- Search page
+![image](/Phase-1+2+3/Screenshots/search.png)
 - Summary result cards
 ![image](/Phase-1+2+3/Screenshots/paper.png)
 - GitHub repo summarizer
