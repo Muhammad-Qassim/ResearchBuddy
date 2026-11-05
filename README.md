@@ -95,12 +95,13 @@ ResearchBuddy/
 ![image](/Phase-1+2+3/Screenshots/search.png)
 - Summary result cards
 ![image](/Phase-1+2+3/Screenshots/paper.png)
-- GitHub repo summarizer
+- Wikipedia topic page
 ![image](/Phase-1+2+3/Screenshots/overview.png)
 - RAG chatbot in action
 ![image](/Phase-1+2+3/Screenshots/rag.png)
+- GitHub repo summarizer
 ![image](/Phase-1+2+3/Screenshots/github.png)
-- Wikipedia topic page
+
 
 ---
 
